@@ -16,3 +16,12 @@ To log the date of a generic event:
 Adding a title to the event:
 
 > mcal YYYY-MM-DD -m "Food factory with the gang"
+
+Editing calendar file directly. This command uses the shell env variable $EDITOR, if set, to open in your desired editor.
+The fallback editor is vi.
+
+> mcal -e
+
+## Requirements
+
+Python 3.X
