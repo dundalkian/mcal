@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+
+import datetime
+import argparse
+import os
+
+class CalendarEntry():
+    def __init__(self):
+        home_dir = os.path.expanduser('~')
+        data_dir = os.path.join(home_dir, '.local', 'share', 'MankCalendar')
+        try: 
+            os.makedirs(data_dir)
+        except FileExistsError:
+            pass
+
+        self.calendar_path = os.path.join(data_dir, 'calendar')
+        self.parse_args()
+
+    def parse_args(self):
+        parser = argparse.ArgumentParser(description='Add events to a calendar')
+        parser.add_argument('iso_date_input', nargs='?', type=str, action='store')
+        parser.add_argument('-m', dest='message', metavar='message', default='Generic calendar entry.', type=str, help='Enter event title or message to be logged')
+        parser.parse_args(namespace=self)
+        # if date given, assume this is a WRITE
+        if self.iso_date_input:
+            try:
+                self.date = datetime.date.fromisoformat(self.iso_date_input)
+            except:
+                print("Bruh, format that as: \'YYYY-MM-DD\' please")
+            self.post_entry()
+        # if no date, assume this is a READ
+        else:
+            self.get_calendar()
+
+    def get_calendar(self):
+        with open(self.calendar_path, 'r') as f:
+            print(f.readlines())
+
+
+    def construct_entry(self):
+        return "{} :: {}".format(self.iso_date_input, self.message)
+
+    def post_entry(self):
+        with open(self.calendar_path, 'w') as f:
+            print(self.construct_entry(), file=f)
+
+entry = CalendarEntry()
+
