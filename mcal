@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import datetime
 import argparse
@@ -34,14 +34,22 @@ class CalendarEntry():
 
     def get_calendar(self):
         with open(self.calendar_path, 'r') as f:
-            print(f.readlines())
+            calendar = f.readlines()
+            # Convert beginning of each entry to a datetime.date object
+            # Sort using this object's comparison methods.
+            calendar.sort(key=lambda e: datetime.date.fromisoformat(e[:10]))
+            for e in calendar:
+                print(e, end='')
+            
+    def strip_iso(self, entry_string):
+        return datetime.date.fromisoformat(entry_string[:10])
 
 
     def construct_entry(self):
-        return "{} :: {}".format(self.iso_date_input, self.message)
+        return "{}: {}".format(self.iso_date_input, self.message)
 
     def post_entry(self):
-        with open(self.calendar_path, 'w') as f:
+        with open(self.calendar_path, 'a') as f:
             print(self.construct_entry(), file=f)
 
 entry = CalendarEntry()
