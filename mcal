@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import subprocess
 import datetime
 import argparse
 import os
@@ -18,8 +18,9 @@ class CalendarEntry():
 
     def parse_args(self):
         parser = argparse.ArgumentParser(description='Add events to a calendar')
-        parser.add_argument('iso_date_input', nargs='?', type=str, action='store')
+        parser.add_argument('iso_date_input', metavar='YYYY-MM-DD', nargs='?', type=str, action='store')
         parser.add_argument('-m', dest='message', metavar='message', default='Generic calendar entry.', type=str, help='Enter event title or message to be logged')
+        parser.add_argument('-e', dest='editor', action='store_true', help='Use your favorite $EDITOR to open your calendar file.')
         parser.parse_args(namespace=self)
         # if date given, assume this is a WRITE
         if self.iso_date_input:
@@ -28,6 +29,13 @@ class CalendarEntry():
             except:
                 print("Bruh, format that as: \'YYYY-MM-DD\' please")
             self.post_entry()
+
+        elif self.editor is True:
+            # Finds $EDITOR env variable. If not set, opens using vi
+            editor_selection = os.environ.get('EDITOR', 'vi')
+            # vi ~/.local/share/MankCalendar/calendar
+            subprocess.run([editor_selection, self.calendar_path])
+        
         # if no date, assume this is a READ
         else:
             self.get_calendar()
