@@ -3,6 +3,7 @@ import subprocess
 import datetime
 import argparse
 import os
+import sys
 
 class CalendarEntry():
     def __init__(self):
@@ -18,16 +19,18 @@ class CalendarEntry():
 
     def parse_args(self):
         parser = argparse.ArgumentParser(description='Add events to a calendar')
-        parser.add_argument('iso_date_input', metavar='YYYY-MM-DD', nargs='?', type=str, action='store')
+        parser.add_argument('iso_date_input', metavar='Date', nargs='?', type=str, action='store', help='Date in iso format YYYY-MM-DD')
         parser.add_argument('-m', dest='message', metavar='message', default='Generic calendar entry.', type=str, help='Enter event title or message to be logged')
         parser.add_argument('-e', dest='editor', action='store_true', help='Use your favorite $EDITOR to open your calendar file.')
+        parser.add_argument('-i', dest='interval', metavar='interval', default=28, type=int, action='store', help='Interval measured in days from start date to fetch entries. Default: 28')
+        parser.add_argument('-s', dest='start_date', metavar='start date', default=datetime.date.today().isoformat(), type=str, action='store', help='Date in iso format from which entries will be displayed. Default: {current day}')
         parser.parse_args(namespace=self)
         # if date given, assume this is a WRITE
         if self.iso_date_input:
             try:
                 self.date = datetime.date.fromisoformat(self.iso_date_input)
             except:
-                print("Bruh, format that as: \'YYYY-MM-DD\' please")
+                sys.exit("ERR: The given entry date is not in the correct format")
             self.post_entry()
 
         elif self.editor is True:
@@ -38,18 +41,25 @@ class CalendarEntry():
         
         # if no date, assume this is a READ
         else:
-            self.get_calendar()
+            try:
+                self.start_date_object = datetime.date.fromisoformat(self.start_date)
+            except:
+                sys.exit("ERR: The given start date is not in the correct format")
+            self.get_calendar(self.start_date, self.interval)
 
-    def get_calendar(self):
+    def get_calendar(self, start, interval):
         with open(self.calendar_path, 'r') as f:
             calendar = f.readlines()
             # Convert beginning of each entry to a datetime.date object
-            # Sort using this object's comparison methods.
-            calendar.sort(key=lambda e: datetime.date.fromisoformat(e[:10]))
+            # Filter out dates before and after defined interval
+            # Sort using the datetime.date object's comparison methods.
+            calendar = filter(lambda d: self.start_date_object <= self.date_from_iso(d) <= self.start_date_object + datetime.timedelta(self.interval), calendar)
+            calendar = sorted(calendar, key=lambda e: self.date_from_iso(e))
             for e in calendar:
-                print(e, end='')
+                # newlines are already included so don't have print insert a newline each call
+                print(e, end='') 
             
-    def strip_iso(self, entry_string):
+    def date_from_iso(self, entry_string):
         return datetime.date.fromisoformat(entry_string[:10])
 
 
